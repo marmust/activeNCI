@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-
 class AETrainer:
     """Handles autoencoder training with balanced mini-batches from LiveDataset."""
 
@@ -13,10 +12,13 @@ class AETrainer:
 
     def train_step(self, human_sigs):
         """Single gradient step on a batch of human signals. Returns loss value."""
+        
         human_sigs = human_sigs.to(self.device)
         reconstructed = self.autoenc(human_sigs)
+        
         loss = self.loss_fn(human_sigs, reconstructed)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        
         return loss.item()

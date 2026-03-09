@@ -15,5 +15,8 @@ class CameraWrapper:
         if self.cap.isOpened():
             self.cap.release()
 
-    def __enter__(self):  return self
-    def __exit__(self, *_): self.release()
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *_):
+        self.release()
