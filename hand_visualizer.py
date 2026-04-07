@@ -19,8 +19,8 @@ _DRAW_TOPOLOGY = [
     (1, 5),                                  # Thumb diagonal
 ]
 
-_BONE_COLOR  = (255,  60,   0)   # bright blue (BGR)
-_JOINT_COLOR = (180,  30,   0)   # dimmer blue (BGR)
+_BONE_COLOR  = (0,  255,   4)   # bright blue (BGR)
+_JOINT_COLOR = (140,  255,   0)   # dimmer blue (BGR)
 _JOINT_RADIUS = 4
 _BONE_THICKNESS = 2
 
@@ -88,9 +88,19 @@ class HandVisualizer:
                          (px[child],  py[child]),
                          _BONE_COLOR, _BONE_THICKNESS, cv2.LINE_AA)
 
+            # draw filled squares at 80% opacity over the bones
+            overlay = canvas.copy()
             for x, y in zip(px, py):
-                cv2.circle(canvas, (x, y), _JOINT_RADIUS,
-                           _JOINT_COLOR, -1, cv2.LINE_AA)
+                r = int(_JOINT_RADIUS * 1.3)
+                top_left = (x - r, y - r)
+                bot_right = (x + r, y + r)
+                cv2.rectangle(overlay, top_left, bot_right, _JOINT_COLOR, -1)
+            cv2.addWeighted(overlay, 0.8, canvas, 0.2, 0, canvas)
+
+            # 1px outline at full opacity — drawn after blend
+            for x, y in zip(px, py):
+                r = int(_JOINT_RADIUS * 1.3)
+                cv2.rectangle(canvas, (x - r, y - r), (x + r, y + r), _JOINT_COLOR, 1)
 
         cv2.imshow(self.window_name, canvas)
         cv2.waitKey(1)
