@@ -19,8 +19,8 @@ _DRAW_TOPOLOGY = [
     (1, 5),                                  # Thumb diagonal
 ]
 
-_BONE_COLOR  = (0,  255,   4)   # bright blue (BGR)
-_JOINT_COLOR = (140,  255,   0)   # dimmer blue (BGR)
+_BONE_COLOR  = (255,   0,   0)   # blue (BGR)
+_JOINT_COLOR = (255,  0,  0)   # blue (BGR)
 _JOINT_RADIUS = 4
 _BONE_THICKNESS = 2
 
@@ -42,6 +42,7 @@ class HandVisualizer:
         self._running_range = None       # EMA of max coordinate range
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(self.window_name, self.w, self.h)
+        cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1.0)
 
     def update(self, hand_tensor) -> None:
         """
