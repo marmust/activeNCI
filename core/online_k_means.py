@@ -2,22 +2,41 @@ import torch
 
 class OnlineKmeans:
     """
-    Online k-means clustering operating on externally-stored latent vectors.
-    No local data storage — reads latents from a LiveDataset via retrain().
-    Uses k-means++ initialization for well-separated starting centroids.
+    Online k-means clustering over externally-stored latent vectors.
+
+    No local data storage; callers pass latents into retrain() each frame.
+    Uses k-means++ seeding for well-separated initial centroids.
+
+    Args:
+        num_centroids (int): number of clusters.
+        device (torch.device): device for centroid tensors.
+        retrain_iters (int): max Lloyd's iterations per retrain call.
+        convergence_atol (float): early-stop threshold for centroid shift.
+        min_cluster_divisor (int): centroid is considered starved when its point
+            count falls below n / (k * divisor). lower = more aggressive reinit.
     """
 
-    def __init__(self, num_centroids, device, retrain_iters=10, convergence_atol=1e-6):
+    def __init__(self, num_centroids, device, retrain_iters=10, convergence_atol=1e-6,
+                 min_cluster_divisor=4):
         self.num_centroids = num_centroids
         self.device = device
         self.retrain_iters = retrain_iters
         self.convergence_atol = convergence_atol
+        self.min_cluster_divisor = min_cluster_divisor
 
         self.centroids = None
         self.initialized = False
 
     def _kmeans_pp_init(self, data):
-        """K-means++ seeding: pick initial centroids that are well-separated."""
+        """
+        Seeds initial centroids using k-means++ (well-separated starts).
+
+        Args:
+            data (torch.Tensor): (n, d) latent vectors.
+
+        Returns:
+            torch.Tensor: (k, d) initial centroids.
+        """
         n = data.size(0)
         k = self.num_centroids
 
@@ -42,15 +61,20 @@ class OnlineKmeans:
 
     def retrain(self, latents):
         """
-        Run Lloyd's algorithm on the provided latents tensor.
-        Handles dead centroids by reinitializing them to the farthest point.
+        Runs Lloyd's algorithm on the provided latents tensor.
+
+        Starved centroids are reinitialised to the point farthest from any centroid.
+
+        Args:
+            latents (torch.Tensor or None): (n, d) latent vectors. no-op if None
+                or fewer points than centroids.
         """
         if latents is None or len(latents) < self.num_centroids:
             return
 
         data = latents.to(self.device)
 
-        # first-time centroid seeding via k-means++
+        # first-time seeding via k-means++
         if not self.initialized:
             self.centroids = self._kmeans_pp_init(data)
             self.initialized = True
@@ -58,10 +82,7 @@ class OnlineKmeans:
         for _ in range(self.retrain_iters):
             dists = torch.cdist(data, self.centroids)
             labels = dists.argmin(dim=1)
-
-            # minimum points per centroid to not be considered starved
-            # (each centroid should have at least ~6% of total data)
-            min_cluster_size = max(1, len(data) // (self.num_centroids * 4))
+            min_cluster_size = max(1, len(data) // (self.num_centroids * self.min_cluster_divisor))
 
             new_centroids = self.centroids.clone()
             for i in range(self.num_centroids):
@@ -69,9 +90,8 @@ class OnlineKmeans:
                 if mask.sum() > min_cluster_size:
                     new_centroids[i] = data[mask].mean(dim=0)
                 else:
-                    # dead or starved centroid: reinitialize to the farthest point
-                    min_dists = dists.min(dim=1).values
-                    farthest_idx = min_dists.argmax()
+                    # starved centroid: reinit to the point farthest from all centroids
+                    farthest_idx = dists.min(dim=1).values.argmax()
                     new_centroids[i] = data[farthest_idx].clone()
 
             if torch.allclose(new_centroids, self.centroids, atol=self.convergence_atol):
@@ -81,7 +101,15 @@ class OnlineKmeans:
             self.centroids = new_centroids
 
     def classify(self, latent):
-        """Classify a single latent vector. Returns (class_index, dists) or (None, None)."""
+        """
+        Classifies a single latent vector by nearest centroid.
+
+        Args:
+            latent (torch.Tensor): (d,) latent vector.
+
+        Returns:
+            tuple: (class_index, dists) or (None, None) if not yet initialized.
+        """
         if not self.initialized:
             return None, None
 

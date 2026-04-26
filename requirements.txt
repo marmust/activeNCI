@@ -1,0 +1,5 @@
+torch
+mediapipe
+opencv-python
+keyboard
+numpy

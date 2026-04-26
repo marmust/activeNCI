@@ -1,3 +1,27 @@
 /claude
+
+# python bytecode
+__pycache__/
 *.pyc
+*.pyo
+
+# mediapipe models — download separately (see README)
 *.task
+
+# jupyter
+.ipynb_checkpoints/
+
+# virtual environments
+venv/
+.venv/
+
+# build artifacts
+dist/
+build/
+*.egg-info/
+
+# planning artifacts
+docs/superpowers/
+
+# local dev helpers
+example.py

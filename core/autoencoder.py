@@ -1,8 +1,15 @@
 import torch
 import torch.nn as nn
 
-
 class HumanSignalEncoder(nn.Module):
+    """
+    Encoder half of HumanSignalAutoencoder.
+
+    Args:
+        signal_shape (tuple): shape of one input sample, e.g. (1, 21, 3).
+        bottleneck (int): output dimension of the latent vector.
+    """
+
     def __init__(self, signal_shape, bottleneck):
         super().__init__()
         input_dim = 1
@@ -25,6 +32,14 @@ class HumanSignalEncoder(nn.Module):
 
 
 class HumanSignalDecoder(nn.Module):
+    """
+    Decoder half of HumanSignalAutoencoder.
+
+    Args:
+        signal_shape (tuple): target output shape, e.g. (1, 21, 3).
+        bottleneck (int): input dimension of the latent vector.
+    """
+
     def __init__(self, signal_shape, bottleneck):
         super().__init__()
         output_dim = 1
@@ -49,6 +64,14 @@ class HumanSignalDecoder(nn.Module):
 
 
 class HumanSignalAutoencoder(nn.Module):
+    """
+    Symmetric autoencoder for arbitrary-shaped human signal tensors.
+
+    Args:
+        signal_shape (tuple): shape of one input sample, e.g. (1, 21, 3).
+        bottleneck (int): latent space dimension.
+    """
+
     def __init__(self, signal_shape=(1, 21, 3), bottleneck=32):
         super().__init__()
         self.encoder = HumanSignalEncoder(signal_shape, bottleneck)
