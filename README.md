@@ -1,6 +1,6 @@
 # activeNCI
 
-![banner](https://media.discordapp.net/attachments/990898405310074892/1497989353195045034/gsdfgssgtdged.png?ex=69ef86cd&is=69ee354d&hm=3d012b6301d52ace05aa5d66b20466b2fb51c91beca053900e1237b44d814164&=&format=webp&quality=lossless&width=2112&height=792)
+![banner](https://github.com/marmust/assets_hosting/blob/0f36f12a68828d3af85efcee0dd9ba8db6cffec2/gsdfgssgtdged.png)
 
 active Neural Computer Interface or activeNCI is an AI system for interpreting a real time signal from a human (currently a hand tracker, meant to be an EEG) and classifying its current state. the innovation here is that the classification doesnt NEED labels, instead relying on online K means.
 
